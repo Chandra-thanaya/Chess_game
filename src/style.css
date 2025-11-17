@@ -4,9 +4,9 @@
 
 body {
     margin: 0;
-    background: #111;
-    font-family: "Segoe UI", sans-serif;
+    background: #0f0f0f;
     color: #eee;
+    font-family: "Segoe UI", sans-serif;
     display: flex;
     justify-content: center;
     padding: 20px;
@@ -22,10 +22,6 @@ header {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-}
-
-#turnIndicator {
-    font-size: 1.2rem;
 }
 
 button {
@@ -47,7 +43,7 @@ main {
 
 .sidebar {
     width: 250px;
-    background: #1b1b1b;
+    background: #1a1a1a;
     padding: 15px;
     border-radius: 10px;
     height: 600px;
@@ -69,7 +65,7 @@ main {
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 45px;
+    font-size: 46px;
     cursor: pointer;
 }
 
@@ -81,7 +77,7 @@ main {
 }
 
 .highlight {
-    outline: 4px solid rgba(255, 255, 0, 0.9);
+    outline: 4px solid rgba(255,255,0,0.9);
 }
 
 .piece {
@@ -97,20 +93,21 @@ main {
     display: flex;
     justify-content: center;
     align-items: center;
-    background: rgba(0,0,0,0.6);
+    background: rgba(0,0,0,0.7);
 }
 
 .modal-content {
     background: #222;
     padding: 20px;
-    border-radius: 8px;
+    border-radius: 10px;
 }
 
-#promotionChoices img {
-    width: 70px;
+#promotionChoices div {
+    font-size: 50px;
     margin: 10px;
     cursor: pointer;
 }
+
 .hidden {
     display: none;
 }
