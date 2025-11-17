@@ -92,7 +92,7 @@ main {
 .piece {
     cursor: grab;
     font-weight: bold;
-    color: #212121; /* default dark color for black pieces */
+    color: #212121;
     text-shadow: 0 0 3px #fff;
 }
 
