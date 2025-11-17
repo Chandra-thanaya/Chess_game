@@ -3,12 +3,19 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Modern Chess (Human vs AI)</title>
+<title>Modern Chess (Human vs AI / Human vs Human)</title>
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header>
-    <h1>♟️ Modern Chess (Human vs AI)</h1>
+    <h1>♟️ Modern Chess</h1>
+    <div id="modeSelector">
+      Mode: 
+      <select id="modeSelect">
+        <option value="human-vs-ai">Human vs AI</option>
+        <option value="human-vs-human">Human vs Human</option>
+      </select>
+    </div>
     <div id="turnIndicator">Turn: White</div>
     <button id="resetBtn">Reset Game</button>
   </header>
