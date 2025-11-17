@@ -1,156 +1,96 @@
-/* Reset */
+/* Reset and base */
 * {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
-  background-color: #121212;
-  color: #eee;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #2e2e2e;
+  color: #f0f0f0;
+  margin: 20px;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 100vh;
-  padding: 20px;
+  justify-content: center;
 }
 
-header {
-  width: 620px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  gap: 10px;
-  flex-wrap: wrap;
+.container {
+  max-width: 600px;
+  text-align: center;
 }
 
-header h1 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  flex-grow: 1;
-}
-
-#modeSelector {
-  font-weight: 600;
-  font-size: 1rem;
-}
-
+/* Turn indicator */
 #turnIndicator {
-  font-weight: 600;
-  font-size: 1rem;
+  margin-bottom: 10px;
+  font-weight: bold;
+  font-size: 1.2rem;
 }
 
-#resetBtn {
-  background-color: #333;
-  border: none;
-  padding: 8px 15px;
-  border-radius: 6px;
-  cursor: pointer;
-  color: #eee;
-  font-weight: 600;
-  transition: background-color 0.3s ease;
-}
-
-#resetBtn:hover {
-  background-color: #f2b233;
-  color: #121212;
-}
-
-main {
-  display: flex;
-  width: 620px;
-  gap: 20px;
-}
-
-#board {
-  width: 480px;
-  height: 480px;
+/* Chessboard grid */
+.chessboard {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
-  border-radius: 12px;
-  box-shadow: 0 0 15px rgba(0,0,0,0.6);
-  user-select: none;
+  width: 480px;
+  height: 480px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 10px #000;
+  margin: 0 auto 15px;
 }
 
-.light {
-  background: #f0d9b5;  /* Warm light cream */
-}
-
-.dark {
-  background: #b58863;  /* Classic chess brown */
-}
-
-/* Highlight for valid moves */
-.square.highlight {
-  outline: 3px solid #f2b233; /* gold highlight */
-  z-index: 5;
-}
-
-.piece {
-  font-size: 54px;
-  cursor: grab;
-  user-select: none;
+/* Each square */
+.square {
+  width: 60px;
+  height: 60px;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100%;
-  width: 100%;
+  font-size: 42px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.3s;
+  position: relative;
 }
 
-.piece.white {
-  color: #ffffff;  /* Pure white */
-  text-shadow: 0 0 5px #000000cc; /* black glow for contrast */
+/* Light and dark squares */
+.square.light {
+  background-color: #f0d9b5;
 }
 
-.piece.black {
-  color: #000000;  /* Pure black */
-  text-shadow: 0 0 3px #ffffffcc; /* subtle white glow */
+.square.dark {
+  background-color: #b58863;
 }
 
-#moveHistory {
-  width: 120px;
-  background-color: #222;
-  border-radius: 10px;
-  padding: 10px;
-  height: 480px;
-  overflow-y: auto;
-  font-size: 0.9rem;
-  font-weight: 600;
+/* Highlight valid moves */
+.square.valid-move {
+  box-shadow: inset 0 0 10px 3px #33cc33;
 }
 
-#moveHistory h2 {
-  margin-bottom: 10px;
-  text-align: center;
+/* Highlight selected piece */
+.square.selected {
+  outline: 3px solid #ff4d4d;
 }
 
-#historyList {
-  list-style: none;
-  max-height: 440px;
-  overflow-y: auto;
+/* Reset button */
+#resetBtn {
+  background-color: #ff9900;
+  border: none;
+  padding: 10px 20px;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  color: #2e2e2e;
+  transition: background-color 0.3s;
+  margin-bottom: 20px;
 }
 
-#historyList li {
-  margin-bottom: 5px;
-  color: #f2b233;
-  text-align: center;
+#resetBtn:hover {
+  background-color: #e67e22;
 }
 
 /* Footer */
 footer {
-  margin-top: 30px;
-  text-align: center;
-  width: 620px;
-  background-color: #222;
-  padding: 15px;
-  border-radius: 12px;
-  color: #ddd;
-  font-weight: 600;
-  line-height: 1.5;
-}
-
-footer p strong {
-  display: block;
-  margin-top: 5px;
+  font-size: 0.9rem;
+  color: #ccc;
+  margin-top: 20px;
+  user-select: none;
+  letter-spacing: 0.05em;
 }
