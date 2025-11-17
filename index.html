@@ -1,38 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Modern Chess (Human vs AI / Human vs Human)</title>
-<link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chessboard with Valid Moves</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header>
-    <h1>♟️ Modern Chess</h1>
-    <div id="modeSelector">
-      Mode: 
-      <select id="modeSelect">
-        <option value="human-vs-ai">Human vs AI</option>
-        <option value="human-vs-human">Human vs Human</option>
-      </select>
-    </div>
+
+  <div class="container">
+    <h1>Minimal Chessboard with Valid Moves</h1>
     <div id="turnIndicator">Turn: White</div>
+    <div id="chessboard" class="chessboard"></div>
     <button id="resetBtn">Reset Game</button>
-  </header>
-  <main>
-    <div id="board"></div>
-    <div id="moveHistory">
-      <h2>Move History</h2>
-      <ul id="historyList"></ul>
-    </div>
-  </main>
-  <footer>
-    <p>Project by:</p>
-    <p><strong>Chandra Thanaya V</strong></p>
-    <p><strong>Adarsh S K</strong></p>
-    <p><strong>Bhuvan R</strong></p>
-    <p><strong>Charan M</strong></p>
-  </footer>
-  <script src="chess.js"></script>
+    <footer>
+      Chandra Thanaya V | Adarsh S K | Bhuvan R | Charan M
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
