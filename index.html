@@ -1,47 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Modern Chess Game</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Modern Chess (Human vs AI)</title>
+<link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<div class="app">
-    <header>
-        <h1>Modern Chess Game</h1>
-        <button onclick="resetGame()">Reset Game</button>
-    </header>
-    <main>
-        <div class="sidebar">
-            <h3>Turn:</h3>
-            <p id="turnIndicator">White</p>
-            <h3>Move History:</h3>
-            <ul id="moveHistory"></ul>
-        </div>
-        <div id="board"></div>
-    </main>
-    <div class="footer">
-        <p>Project by:</p>
-        <p>Chandra Thanaya V</p>
-        <p>Adarsh S K</p>
-        <p>Bhuvan R</p>
-        <p>Charan M</p>
+  <header>
+    <h1>♟️ Modern Chess (Human vs AI)</h1>
+    <div id="turnIndicator">Turn: White</div>
+    <button id="resetBtn">Reset Game</button>
+  </header>
+  <main>
+    <div id="board"></div>
+    <div id="moveHistory">
+      <h2>Move History</h2>
+      <ul id="historyList"></ul>
     </div>
-</div>
-
-<!-- Promotion Modal -->
-<div class="modal hidden" id="promotionModal">
-    <div class="modal-content">
-        <h3>Promote Pawn</h3>
-        <div id="promotionChoices">
-            <div data-piece="Q">♕</div>
-            <div data-piece="R">♖</div>
-            <div data-piece="B">♗</div>
-            <div data-piece="N">♘</div>
-        </div>
-    </div>
-</div>
-
-<script src="chess.js"></script>
+  </main>
+  <footer>
+    <p>Project by:</p>
+    <p><strong>Chandra Thanaya V</strong></p>
+    <p><strong>Adarsh S K</strong></p>
+    <p><strong>Bhuvan R</strong></p>
+    <p><strong>Charan M</strong></p>
+  </footer>
+  <script src="chess.js"></script>
 </body>
 </html>
