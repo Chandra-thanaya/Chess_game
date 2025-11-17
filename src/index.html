@@ -1,1 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chess</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <div class="app">
+        <header>
+            <h1>♟ Modern Chess</h1>
+            <div id="turnIndicator">Turn: White</div>
+            <button id="resetBtn">Reset Game</button>
+        </header>
+
+        <main>
+            <div id="board"></div>
+
+            <aside class="sidebar">
+                <h2>Move History</h2>
+                <ul id="history"></ul>
+            </aside>
+        </main>
+    </div>
+
+    <!-- Promotion Modal -->
+    <div id="promotionModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Choose Promotion</h3>
+            <div id="promotionChoices"></div>
+        </div>
+    </div>
+
+    <audio id="moveSound" src="https://cdn.jsdelivr.net/gh/naptha/tinyfiles/audio/chessmove.mp3"></audio>
+    <audio id="captureSound" src="https://cdn.jsdelivr.net/gh/naptha/tinyfiles/audio/chesscapture.mp3"></audio>
+
+    <script src="chess.js"></script>
+</body>
+</html>
 
