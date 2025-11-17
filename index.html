@@ -1,23 +1,36 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Chessboard with Valid Moves</title>
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
+<!-- Used to get images -->
+<base href="http://chessboardjs.com/" />
+<h3 class="board">
+  Improved evaluation
+</h3>
 
-  <div class="container">
-    <h1>Minimal Chessboard with Valid Moves</h1>
-    <div id="turnIndicator">Turn: White</div>
-    <div id="chessboard" class="chessboard"></div>
-    <button id="resetBtn">Reset Game</button>
-    <footer>
-      Chandra Thanaya V | Adarsh S K | Bhuvan R | Charan M
-    </footer>
-  </div>
+<div style="text-align:center; margin-bottom: 10px;">
+  <button id="toggle-mode-btn">Switch to Human vs Human</button>
+</div>
 
-  <script src="script.js"></script>
-</body>
-</html>
+<div id="board" class="board"></div>
+<br>
+<div class="info">
+    Search depth:
+    <select id="search-depth">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3" selected>3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+    </select>
+
+    <br>
+    <span>Positions evaluated: <span id="position-count"></span></span>
+    <br>
+    <span>Time: <span id="time"></span></span>
+    <br>
+    <span>Positions/s: <span id="positions-per-s"></span> </span>
+    <br>
+    <br>
+    <div id="move-history" class="move-history"></div>
+</div>
+
+<footer style="text-align:center; margin-top: 20px; font-size: 0.9em; color: #666;">
+  Developed by <strong>Player1</strong> &amp; <strong>Player2</strong>
+</footer>
