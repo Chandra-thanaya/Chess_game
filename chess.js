@@ -1,232 +1,241 @@
-const board = document.getElementById('board');
-const turnIndicator = document.getElementById('turnIndicator');
-const resetBtn = document.getElementById('resetBtn');
-const historyList = document.getElementById('historyList');
-const modeSelect = document.getElementById('modeSelect');
-
-const piecesSymbols = {
-  'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘', 'P': '♙',
-  'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟',
+// Unicode chess pieces for better visibility
+const PIECES_UNICODE = {
+  'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔',
+  'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚',
 };
 
-let boardState = [];
-let turn = 'w'; // 'w' or 'b'
+const boardEl = document.getElementById('chessboard');
+const turnIndicator = document.getElementById('turnIndicator');
+const resetBtn = document.getElementById('resetBtn');
+
+let board = [];
 let selectedSquare = null;
 let validMoves = [];
-let moveHistory = [];
-let gameMode = 'human-vs-ai';  // default mode
+let turn = 'w'; // 'w' for white, 'b' for black
 
-function createInitialBoard() {
-  return [
-    ['r','n','b','q','k','b','n','r'],
-    ['p','p','p','p','p','p','p','p'],
-    ['','','','','','','',''],
-    ['','','','','','','',''],
-    ['','','','','','','',''],
-    ['','','','','','','',''],
-    ['P','P','P','P','P','P','P','P'],
-    ['R','N','B','Q','K','B','N','R'],
-  ];
-}
+// Initial chessboard setup using FEN notation style (simplified)
+const initialBoardSetup = [
+  ['r','n','b','q','k','b','n','r'],
+  ['p','p','p','p','p','p','p','p'],
+  ['','','','','','','',''],
+  ['','','','','','','',''],
+  ['','','','','','','',''],
+  ['','','','','','','',''],
+  ['P','P','P','P','P','P','P','P'],
+  ['R','N','B','Q','K','B','N','R'],
+];
 
-function renderBoard() {
-  board.innerHTML = '';
-  for(let i=0; i<8; i++) {
-    for(let j=0; j<8; j++) {
-      const sq = document.createElement('div');
-      sq.classList.add((i + j) % 2 === 0 ? 'light' : 'dark');
-      sq.dataset.row = i;
-      sq.dataset.col = j;
-
-      const piece = boardState[i][j];
-      sq.innerHTML = piece ? `<span class="piece ${piece === piece.toUpperCase() ? 'white' : 'black'}">${piecesSymbols[piece]}</span>` : '';
-
-      if(selectedSquare && i === selectedSquare[0] && j === selectedSquare[1]) {
-        sq.classList.add('highlight');
-      }
-      if(validMoves.some(m => m[0] === i && m[1] === j)) {
-        sq.classList.add('highlight');
-      }
-
-      sq.addEventListener('click', () => onSquareClick(i, j));
-      board.appendChild(sq);
-    }
-  }
-}
-
-function onSquareClick(row, col) {
-  if(selectedSquare) {
-    // Try to move if clicked on valid move
-    if(validMoves.some(m => m[0] === row && m[1] === col)) {
-      movePiece(selectedSquare, [row, col]);
-      selectedSquare = null;
-      validMoves = [];
-      renderBoard();
-      updateTurn();
-      renderHistory();
-
-      if(gameMode === 'human-vs-ai' && turn === 'b') {
-        setTimeout(aiMove, 300);
-      }
-      return;
-    } else {
-      selectedSquare = null;
-      validMoves = [];
-      renderBoard();
-    }
-  }
-
-  // Select piece if player's turn and valid piece
-  if(boardState[row][col] && isCurrentPlayersPiece(row, col)) {
-    selectedSquare = [row, col];
-    validMoves = calculateValidMoves(row, col);
-    renderBoard();
-  }
-}
-
-function isCurrentPlayersPiece(row, col) {
-  const p = boardState[row][col];
-  if(!p) return false;
-
-  if(gameMode === 'human-vs-human') {
-    // Both players human - just check turn matches piece color
-    return (turn === 'w' && p === p.toUpperCase()) || (turn === 'b' && p === p.toLowerCase());
-  } else {
-    // Human vs AI - human always plays White
-    if(turn === 'w') {
-      return p === p.toUpperCase();
-    } else {
-      // black is AI
-      return false;
-    }
-  }
-}
-
-function calculateValidMoves(row, col) {
-  const moves = [];
-  const p = boardState[row][col];
-  if(!p) return moves;
-
-  const isWhite = p === p.toUpperCase();
-
-  if(p.toLowerCase() === 'p') {
-    // Pawn move
-    const dir = isWhite ? -1 : 1;
-    if(isInBounds(row + dir, col) && !boardState[row + dir][col]) {
-      moves.push([row + dir, col]);
-    }
-    // capture diagonals
-    if(isInBounds(row + dir, col + 1) && boardState[row + dir][col + 1] && isOpponentPiece(row + dir, col + 1, isWhite)) {
-      moves.push([row + dir, col + 1]);
-    }
-    if(isInBounds(row + dir, col - 1) && boardState[row + dir][col - 1] && isOpponentPiece(row + dir, col - 1, isWhite)) {
-      moves.push([row + dir, col - 1]);
-    }
-  } else if(p.toLowerCase() === 'n') {
-    // Knight moves
-    const knightMoves = [
-      [row+2, col+1],[row+2, col-1],[row-2, col+1],[row-2, col-1],
-      [row+1, col+2],[row+1, col-2],[row-1, col+2],[row-1, col-2]
-    ];
-    for(const [r,c] of knightMoves) {
-      if(isInBounds(r,c) && (!boardState[r][c] || isOpponentPiece(r,c,isWhite))) {
-        moves.push([r,c]);
-      }
-    }
-  } else {
-    // King moves (1 square any direction)
-    const kingDirs = [
-      [1,0],[-1,0],[0,1],[0,-1],
-      [1,1],[-1,-1],[1,-1],[-1,1]
-    ];
-    for(const [dr, dc] of kingDirs) {
-      const nr = row + dr;
-      const nc = col + dc;
-      if(isInBounds(nr, nc) && (!boardState[nr][nc] || isOpponentPiece(nr,nc,isWhite))) {
-        moves.push([nr,nc]);
-      }
-    }
-  }
-  return moves;
-}
-
-function isInBounds(r,c) {
+// Utility function: check if coordinates are on board
+function onBoard(r, c) {
   return r >= 0 && r < 8 && c >= 0 && c < 8;
 }
 
-function isOpponentPiece(r,c,isWhite) {
-  const p = boardState[r][c];
-  if(!p) return false;
-  return isWhite ? (p === p.toLowerCase()) : (p === p.toUpperCase());
-}
-
-function movePiece(from, to) {
-  const [fr, fc] = from;
-  const [tr, tc] = to;
-  const piece = boardState[fr][fc];
-  const captured = boardState[tr][tc];
-
-  boardState[tr][tc] = piece;
-  boardState[fr][fc] = '';
-
-  moveHistory.push(`${piece}${String.fromCharCode(97+fc)}${8-fr} → ${String.fromCharCode(97+tc)}${8-tr}${captured ? ' x' : ''}`);
-}
-
-function updateTurn() {
-  turn = turn === 'w' ? 'b' : 'w';
-  turnIndicator.textContent = `Turn: ${turn === 'w' ? 'White' : 'Black'}`;
-}
-
-function renderHistory() {
-  historyList.innerHTML = '';
-  for(let i = 0; i < moveHistory.length; i++) {
-    const li = document.createElement('li');
-    li.textContent = moveHistory[i];
-    historyList.appendChild(li);
-  }
-  historyList.scrollTop = historyList.scrollHeight;
-}
-
-// Simple AI: random valid move for black
-function aiMove() {
-  if(turn !== 'b' || gameMode !== 'human-vs-ai') return;
-  let allMoves = [];
+// Initialize board state
+function initBoard() {
+  board = [];
   for(let r=0; r<8; r++) {
+    board[r] = [];
     for(let c=0; c<8; c++) {
-      if(boardState[r][c] && boardState[r][c] === boardState[r][c].toLowerCase()) {
-        const moves = calculateValidMoves(r,c);
-        moves.forEach(mv => allMoves.push({from: [r,c], to: mv}));
-      }
+      board[r][c] = initialBoardSetup[r][c];
     }
   }
-  if(allMoves.length === 0) {
-    alert('Game over: White wins!');
-    return;
-  }
-  const choice = allMoves[Math.floor(Math.random() * allMoves.length)];
-  movePiece(choice.from, choice.to);
-  updateTurn();
-  renderBoard();
-  renderHistory();
-}
-
-resetBtn.addEventListener('click', () => {
-  boardState = createInitialBoard();
   turn = 'w';
   selectedSquare = null;
   validMoves = [];
-  moveHistory = [];
-  turnIndicator.textContent = 'Turn: White';
+  updateTurnIndicator();
   renderBoard();
-  renderHistory();
-});
+}
 
-modeSelect.addEventListener('change', () => {
-  gameMode = modeSelect.value;
-  resetBtn.click();  // reset game on mode change
-});
+// Render the chessboard grid and pieces
+function renderBoard() {
+  boardEl.innerHTML = '';
+  for(let r=0; r<8; r++) {
+    for(let c=0; c<8; c++) {
+      const square = document.createElement('div');
+      square.classList.add('square');
+      square.classList.add((r + c) % 2 === 0 ? 'light' : 'dark');
+      square.dataset.row = r;
+      square.dataset.col = c;
 
-// Initialize
-boardState = createInitialBoard();
-renderBoard();
-renderHistory();
+      if (board[r][c]) {
+        square.textContent = PIECES_UNICODE[board[r][c]];
+      }
+
+      // Highlight selected
+      if (selectedSquare && selectedSquare[0] === r && selectedSquare[1] === c) {
+        square.classList.add('selected');
+      }
+
+      // Highlight valid moves
+      for (const m of validMoves) {
+        if (m[0] === r && m[1] === c) {
+          square.classList.add('valid-move');
+          break;
+        }
+      }
+
+      square.addEventListener('click', () => onSquareClick(r, c));
+
+      boardEl.appendChild(square);
+    }
+  }
+}
+
+// Update turn display
+function updateTurnIndicator() {
+  turnIndicator.textContent = `Turn: ${turn === 'w' ? 'White' : 'Black'}`;
+}
+
+// Get piece color (lowercase = black, uppercase = white)
+function pieceColor(piece) {
+  if (!piece) return null;
+  return piece === piece.toUpperCase() ? 'w' : 'b';
+}
+
+// Check if move is valid according to piece move rules
+function getValidMoves(r, c) {
+  const piece = board[r][c];
+  if (!piece || pieceColor(piece) !== turn) return [];
+
+  const moves = [];
+
+  // Directions for sliding pieces
+  const rookDirs = [[1,0],[-1,0],[0,1],[0,-1]];
+  const bishopDirs = [[1,1],[1,-1],[-1,1],[-1,-1]];
+
+  function addMovesInDirection(dirs) {
+    for (const [dr, dc] of dirs) {
+      let nr = r + dr;
+      let nc = c + dc;
+      while (onBoard(nr, nc)) {
+        if (!board[nr][nc]) {
+          moves.push([nr,nc]);
+        } else {
+          if (pieceColor(board[nr][nc]) !== turn) {
+            moves.push([nr,nc]); // can capture enemy
+          }
+          break;
+        }
+        nr += dr;
+        nc += dc;
+      }
+    }
+  }
+
+  switch(piece.toLowerCase()) {
+    case 'p': {
+      // Pawn moves
+      let dir = (pieceColor(piece) === 'w') ? -1 : 1;
+      // One step forward
+      if (onBoard(r+dir, c) && !board[r+dir][c]) {
+        moves.push([r+dir,c]);
+        // Two steps if first move
+        if ((r === 6 && dir === -1) || (r === 1 && dir === 1)) {
+          if (!board[r + 2*dir][c]) moves.push([r + 2*dir,c]);
+        }
+      }
+      // Captures
+      for (const dc of [-1, 1]) {
+        let nr = r + dir;
+        let nc = c + dc;
+        if (onBoard(nr,nc) && board[nr][nc] && pieceColor(board[nr][nc]) !== turn) {
+          moves.push([nr,nc]);
+        }
+      }
+      break;
+    }
+    case 'r': {
+      addMovesInDirection(rookDirs);
+      break;
+    }
+    case 'b': {
+      addMovesInDirection(bishopDirs);
+      break;
+    }
+    case 'q': {
+      addMovesInDirection([...rookDirs, ...bishopDirs]);
+      break;
+    }
+    case 'k': {
+      // King moves one square in all directions
+      const kingDirs = [...rookDirs, ...bishopDirs];
+      for (const [dr, dc] of kingDirs) {
+        let nr = r + dr;
+        let nc = c + dc;
+        if (onBoard(nr,nc)) {
+          if (!board[nr][nc] || pieceColor(board[nr][nc]) !== turn) {
+            moves.push([nr,nc]);
+          }
+        }
+      }
+      break;
+    }
+    case 'n': {
+      // Knight moves (L shape)
+      const knightMoves = [
+        [-2, -1], [-2, 1],
+        [-1, -2], [-1, 2],
+        [1, -2], [1, 2],
+        [2, -1], [2, 1]
+      ];
+      for (const [dr, dc] of knightMoves) {
+        let nr = r + dr;
+        let nc = c + dc;
+        if (onBoard(nr,nc)) {
+          if (!board[nr][nc] || pieceColor(board[nr][nc]) !== turn) {
+            moves.push([nr,nc]);
+          }
+        }
+      }
+      break;
+    }
+  }
+
+  return moves;
+}
+
+// Move piece and change turn
+function makeMove(fromR, fromC, toR, toC) {
+  board[toR][toC] = board[fromR][fromC];
+  board[fromR][fromC] = '';
+
+  // Switch turn
+  turn = turn === 'w' ? 'b' : 'w';
+  selectedSquare = null;
+  validMoves = [];
+  updateTurnIndicator();
+  renderBoard();
+}
+
+// Handle clicking a square
+function onSquareClick(r, c) {
+  if (selectedSquare) {
+    // If clicked a valid move
+    if (validMoves.some(m => m[0] === r && m[1] === c)) {
+      makeMove(selectedSquare[0], selectedSquare[1], r, c);
+    } else {
+      // Select new piece if it's player's turn and valid
+      if (board[r][c] && pieceColor(board[r][c]) === turn) {
+        selectedSquare = [r, c];
+        validMoves = getValidMoves(r, c);
+        renderBoard();
+      } else {
+        // Deselect if clicked invalid
+        selectedSquare = null;
+        validMoves = [];
+        renderBoard();
+      }
+    }
+  } else {
+    // No piece selected: select if player's turn piece
+    if (board[r][c] && pieceColor(board[r][c]) === turn) {
+      selectedSquare = [r, c];
+      validMoves = getValidMoves(r, c);
+      renderBoard();
+    }
+  }
+}
+
+resetBtn.addEventListener('click', initBoard);
+
+initBoard();
