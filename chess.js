@@ -1,241 +1,305 @@
-// Unicode chess pieces for better visibility
-const PIECES_UNICODE = {
-  'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔',
-  'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚',
+var board,
+    game = new Chess();
+
+var humanVsHuman = false;  // Mode toggle: false = Human vs AI, true = Human vs Human
+
+// Minimax & evaluation code (unchanged from your provided code)
+
+var minimaxRoot = function(depth, game, isMaximisingPlayer) {
+    var newGameMoves = game.ugly_moves();
+    var bestMove = -9999;
+    var bestMoveFound;
+
+    for(var i = 0; i < newGameMoves.length; i++) {
+        var newGameMove = newGameMoves[i];
+        game.ugly_move(newGameMove);
+        var value = minimax(depth - 1, game, -10000, 10000, !isMaximisingPlayer);
+        game.undo();
+        if(value >= bestMove) {
+            bestMove = value;
+            bestMoveFound = newGameMove;
+        }
+    }
+    return bestMoveFound;
 };
 
-const boardEl = document.getElementById('chessboard');
-const turnIndicator = document.getElementById('turnIndicator');
-const resetBtn = document.getElementById('resetBtn');
+var minimax = function (depth, game, alpha, beta, isMaximisingPlayer) {
+    positionCount++;
+    if (depth === 0) {
+        return -evaluateBoard(game.board());
+    }
 
-let board = [];
-let selectedSquare = null;
-let validMoves = [];
-let turn = 'w'; // 'w' for white, 'b' for black
+    var newGameMoves = game.ugly_moves();
 
-// Initial chessboard setup using FEN notation style (simplified)
-const initialBoardSetup = [
-  ['r','n','b','q','k','b','n','r'],
-  ['p','p','p','p','p','p','p','p'],
-  ['','','','','','','',''],
-  ['','','','','','','',''],
-  ['','','','','','','',''],
-  ['','','','','','','',''],
-  ['P','P','P','P','P','P','P','P'],
-  ['R','N','B','Q','K','B','N','R'],
+    if (isMaximisingPlayer) {
+        var bestMove = -9999;
+        for (var i = 0; i < newGameMoves.length; i++) {
+            game.ugly_move(newGameMoves[i]);
+            bestMove = Math.max(bestMove, minimax(depth - 1, game, alpha, beta, !isMaximisingPlayer));
+            game.undo();
+            alpha = Math.max(alpha, bestMove);
+            if (beta <= alpha) {
+                return bestMove;
+            }
+        }
+        return bestMove;
+    } else {
+        var bestMove = 9999;
+        for (var i = 0; i < newGameMoves.length; i++) {
+            game.ugly_move(newGameMoves[i]);
+            bestMove = Math.min(bestMove, minimax(depth - 1, game, alpha, beta, !isMaximisingPlayer));
+            game.undo();
+            beta = Math.min(beta, bestMove);
+            if (beta <= alpha) {
+                return bestMove;
+            }
+        }
+        return bestMove;
+    }
+};
+
+var evaluateBoard = function (board) {
+    var totalEvaluation = 0;
+    for (var i = 0; i < 8; i++) {
+        for (var j = 0; j < 8; j++) {
+            totalEvaluation += getPieceValue(board[i][j], i, j);
+        }
+    }
+    return totalEvaluation;
+};
+
+var reverseArray = function(array) {
+    return array.slice().reverse();
+};
+
+var pawnEvalWhite = [
+    [0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0],
+    [5.0,  5.0,  5.0,  5.0,  5.0,  5.0,  5.0,  5.0],
+    [1.0,  1.0,  2.0,  3.0,  3.0,  2.0,  1.0,  1.0],
+    [0.5,  0.5,  1.0,  2.5,  2.5,  1.0,  0.5,  0.5],
+    [0.0,  0.0,  0.0,  2.0,  2.0,  0.0,  0.0,  0.0],
+    [0.5, -0.5, -1.0,  0.0,  0.0, -1.0, -0.5,  0.5],
+    [0.5,  1.0,  1.0, -2.0, -2.0,  1.0,  1.0,  0.5],
+    [0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0]
 ];
 
-// Utility function: check if coordinates are on board
-function onBoard(r, c) {
-  return r >= 0 && r < 8 && c >= 0 && c < 8;
-}
+var pawnEvalBlack = reverseArray(pawnEvalWhite);
 
-// Initialize board state
-function initBoard() {
-  board = [];
-  for(let r=0; r<8; r++) {
-    board[r] = [];
-    for(let c=0; c<8; c++) {
-      board[r][c] = initialBoardSetup[r][c];
+var knightEval = [
+    [-5.0, -4.0, -3.0, -3.0, -3.0, -3.0, -4.0, -5.0],
+    [-4.0, -2.0,  0.0,  0.0,  0.0,  0.0, -2.0, -4.0],
+    [-3.0,  0.0,  1.0,  1.5,  1.5,  1.0,  0.0, -3.0],
+    [-3.0,  0.5,  1.5,  2.0,  2.0,  1.5,  0.5, -3.0],
+    [-3.0,  0.0,  1.5,  2.0,  2.0,  1.5,  0.0, -3.0],
+    [-3.0,  0.5,  1.0,  1.5,  1.5,  1.0,  0.5, -3.0],
+    [-4.0, -2.0,  0.0,  0.5,  0.5,  0.0, -2.0, -4.0],
+    [-5.0, -4.0, -3.0, -3.0, -3.0, -3.0, -4.0, -5.0]
+];
+
+var bishopEvalWhite = [
+    [ -2.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -2.0],
+    [ -1.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -1.0],
+    [ -1.0,  0.0,  0.5,  1.0,  1.0,  0.5,  0.0, -1.0],
+    [ -1.0,  0.5,  0.5,  1.0,  1.0,  0.5,  0.5, -1.0],
+    [ -1.0,  0.0,  1.0,  1.0,  1.0,  1.0,  0.0, -1.0],
+    [ -1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0, -1.0],
+    [ -1.0,  0.5,  0.0,  0.0,  0.0,  0.0,  0.5, -1.0],
+    [ -2.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -2.0]
+];
+
+var bishopEvalBlack = reverseArray(bishopEvalWhite);
+
+var rookEvalWhite = [
+    [  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0],
+    [  0.5,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  0.5],
+    [ -0.5,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -0.5],
+    [ -0.5,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -0.5],
+    [ -0.5,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -0.5],
+    [ -0.5,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -0.5],
+    [ -0.5,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -0.5],
+    [  0.0,  0.0,  0.0,  0.5,  0.5,  0.0,  0.0,  0.0]
+];
+
+var rookEvalBlack = reverseArray(rookEvalWhite);
+
+var evalQueen = [
+    [ -2.0, -1.0, -1.0, -0.5, -0.5, -1.0, -1.0, -2.0],
+    [ -1.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -1.0],
+    [ -1.0,  0.0,  0.5,  0.5,  0.5,  0.5,  0.0, -1.0],
+    [ -0.5,  0.0,  0.5,  0.5,  0.5,  0.5,  0.0, -0.5],
+    [  0.0,  0.0,  0.5,  0.5,  0.5,  0.5,  0.0, -0.5],
+    [ -1.0,  0.5,  0.5,  0.5,  0.5,  0.5,  0.0, -1.0],
+    [ -1.0,  0.0,  0.5,  0.0,  0.0,  0.0,  0.0, -1.0],
+    [ -2.0, -1.0, -1.0, -0.5, -0.5, -1.0, -1.0, -2.0]
+];
+
+var kingEvalWhite = [
+    [ -3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0],
+    [ -3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0],
+    [ -3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0],
+    [ -3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0],
+    [ -2.0, -3.0, -3.0, -4.0, -4.0, -3.0, -3.0, -2.0],
+    [ -1.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -1.0],
+    [  2.0,  2.0,  0.0,  0.0,  0.0,  0.0,  2.0,  2.0],
+    [  2.0,  3.0,  1.0,  0.0,  0.0,  1.0,  3.0,  2.0]
+];
+
+var kingEvalBlack = reverseArray(kingEvalWhite);
+
+var getPieceValue = function (piece, x, y) {
+    if (piece === null) {
+        return 0;
     }
-  }
-  turn = 'w';
-  selectedSquare = null;
-  validMoves = [];
-  updateTurnIndicator();
-  renderBoard();
-}
-
-// Render the chessboard grid and pieces
-function renderBoard() {
-  boardEl.innerHTML = '';
-  for(let r=0; r<8; r++) {
-    for(let c=0; c<8; c++) {
-      const square = document.createElement('div');
-      square.classList.add('square');
-      square.classList.add((r + c) % 2 === 0 ? 'light' : 'dark');
-      square.dataset.row = r;
-      square.dataset.col = c;
-
-      if (board[r][c]) {
-        square.textContent = PIECES_UNICODE[board[r][c]];
-      }
-
-      // Highlight selected
-      if (selectedSquare && selectedSquare[0] === r && selectedSquare[1] === c) {
-        square.classList.add('selected');
-      }
-
-      // Highlight valid moves
-      for (const m of validMoves) {
-        if (m[0] === r && m[1] === c) {
-          square.classList.add('valid-move');
-          break;
+    var getAbsoluteValue = function (piece, isWhite, x ,y) {
+        if (piece.type === 'p') {
+            return 10 + ( isWhite ? pawnEvalWhite[y][x] : pawnEvalBlack[y][x] );
+        } else if (piece.type === 'r') {
+            return 50 + ( isWhite ? rookEvalWhite[y][x] : rookEvalBlack[y][x] );
+        } else if (piece.type === 'n') {
+            return 30 + knightEval[y][x];
+        } else if (piece.type === 'b') {
+            return 30 + ( isWhite ? bishopEvalWhite[y][x] : bishopEvalBlack[y][x] );
+        } else if (piece.type === 'q') {
+            return 90 + evalQueen[y][x];
+        } else if (piece.type === 'k') {
+            return 900 + ( isWhite ? kingEvalWhite[y][x] : kingEvalBlack[y][x] );
         }
-      }
+        throw "Unknown piece type: " + piece.type;
+    };
 
-      square.addEventListener('click', () => onSquareClick(r, c));
+    var absoluteValue = getAbsoluteValue(piece, piece.color === 'w', x ,y);
+    return piece.color === 'w' ? absoluteValue : -absoluteValue;
+};
 
-      boardEl.appendChild(square);
+// UI and game interaction
+
+var onDragStart = function (source, piece, position, orientation) {
+    if (game.in_checkmate() === true || game.in_draw() === true) {
+        return false;
     }
-  }
-}
 
-// Update turn display
-function updateTurnIndicator() {
-  turnIndicator.textContent = `Turn: ${turn === 'w' ? 'White' : 'Black'}`;
-}
-
-// Get piece color (lowercase = black, uppercase = white)
-function pieceColor(piece) {
-  if (!piece) return null;
-  return piece === piece.toUpperCase() ? 'w' : 'b';
-}
-
-// Check if move is valid according to piece move rules
-function getValidMoves(r, c) {
-  const piece = board[r][c];
-  if (!piece || pieceColor(piece) !== turn) return [];
-
-  const moves = [];
-
-  // Directions for sliding pieces
-  const rookDirs = [[1,0],[-1,0],[0,1],[0,-1]];
-  const bishopDirs = [[1,1],[1,-1],[-1,1],[-1,-1]];
-
-  function addMovesInDirection(dirs) {
-    for (const [dr, dc] of dirs) {
-      let nr = r + dr;
-      let nc = c + dc;
-      while (onBoard(nr, nc)) {
-        if (!board[nr][nc]) {
-          moves.push([nr,nc]);
-        } else {
-          if (pieceColor(board[nr][nc]) !== turn) {
-            moves.push([nr,nc]); // can capture enemy
-          }
-          break;
-        }
-        nr += dr;
-        nc += dc;
-      }
+    // If Human vs AI mode, prevent black pieces from being moved by human
+    if (!humanVsHuman && piece.search(/^b/) !== -1) {
+        return false;
     }
-  }
+};
 
-  switch(piece.toLowerCase()) {
-    case 'p': {
-      // Pawn moves
-      let dir = (pieceColor(piece) === 'w') ? -1 : 1;
-      // One step forward
-      if (onBoard(r+dir, c) && !board[r+dir][c]) {
-        moves.push([r+dir,c]);
-        // Two steps if first move
-        if ((r === 6 && dir === -1) || (r === 1 && dir === 1)) {
-          if (!board[r + 2*dir][c]) moves.push([r + 2*dir,c]);
-        }
-      }
-      // Captures
-      for (const dc of [-1, 1]) {
-        let nr = r + dir;
-        let nc = c + dc;
-        if (onBoard(nr,nc) && board[nr][nc] && pieceColor(board[nr][nc]) !== turn) {
-          moves.push([nr,nc]);
-        }
-      }
-      break;
+var makeBestMove = function () {
+    if (humanVsHuman) {
+        // No AI moves in Human vs Human mode
+        return;
     }
-    case 'r': {
-      addMovesInDirection(rookDirs);
-      break;
-    }
-    case 'b': {
-      addMovesInDirection(bishopDirs);
-      break;
-    }
-    case 'q': {
-      addMovesInDirection([...rookDirs, ...bishopDirs]);
-      break;
-    }
-    case 'k': {
-      // King moves one square in all directions
-      const kingDirs = [...rookDirs, ...bishopDirs];
-      for (const [dr, dc] of kingDirs) {
-        let nr = r + dr;
-        let nc = c + dc;
-        if (onBoard(nr,nc)) {
-          if (!board[nr][nc] || pieceColor(board[nr][nc]) !== turn) {
-            moves.push([nr,nc]);
-          }
-        }
-      }
-      break;
-    }
-    case 'n': {
-      // Knight moves (L shape)
-      const knightMoves = [
-        [-2, -1], [-2, 1],
-        [-1, -2], [-1, 2],
-        [1, -2], [1, 2],
-        [2, -1], [2, 1]
-      ];
-      for (const [dr, dc] of knightMoves) {
-        let nr = r + dr;
-        let nc = c + dc;
-        if (onBoard(nr,nc)) {
-          if (!board[nr][nc] || pieceColor(board[nr][nc]) !== turn) {
-            moves.push([nr,nc]);
-          }
-        }
-      }
-      break;
-    }
-  }
 
-  return moves;
-}
+    var bestMove = getBestMove(game);
+    game.ugly_move(bestMove);
+    board.position(game.fen());
+    renderMoveHistory(game.history());
 
-// Move piece and change turn
-function makeMove(fromR, fromC, toR, toC) {
-  board[toR][toC] = board[fromR][fromC];
-  board[fromR][fromC] = '';
-
-  // Switch turn
-  turn = turn === 'w' ? 'b' : 'w';
-  selectedSquare = null;
-  validMoves = [];
-  updateTurnIndicator();
-  renderBoard();
-}
-
-// Handle clicking a square
-function onSquareClick(r, c) {
-  if (selectedSquare) {
-    // If clicked a valid move
-    if (validMoves.some(m => m[0] === r && m[1] === c)) {
-      makeMove(selectedSquare[0], selectedSquare[1], r, c);
-    } else {
-      // Select new piece if it's player's turn and valid
-      if (board[r][c] && pieceColor(board[r][c]) === turn) {
-        selectedSquare = [r, c];
-        validMoves = getValidMoves(r, c);
-        renderBoard();
-      } else {
-        // Deselect if clicked invalid
-        selectedSquare = null;
-        validMoves = [];
-        renderBoard();
-      }
+    if (game.game_over()) {
+        alert('Game over');
     }
-  } else {
-    // No piece selected: select if player's turn piece
-    if (board[r][c] && pieceColor(board[r][c]) === turn) {
-      selectedSquare = [r, c];
-      validMoves = getValidMoves(r, c);
-      renderBoard();
+};
+
+var positionCount;
+var getBestMove = function (game) {
+    if (game.game_over()) {
+        alert('Game over');
     }
-  }
-}
 
-resetBtn.addEventListener('click', initBoard);
+    positionCount = 0;
+    var depth = parseInt($('#search-depth').find(':selected').text());
 
-initBoard();
+    var d = new Date().getTime();
+    var bestMove = minimaxRoot(depth, game, true);
+    var d2 = new Date().getTime();
+    var moveTime = (d2 - d);
+    var positionsPerS = ( positionCount * 1000 / moveTime);
+
+    $('#position-count').text(positionCount);
+    $('#time').text(moveTime/1000 + 's');
+    $('#positions-per-s').text(positionsPerS);
+    return bestMove;
+};
+
+var renderMoveHistory = function (moves) {
+    var historyElement = $('#move-history').empty();
+    for (var i = 0; i < moves.length; i += 2) {
+        historyElement.append('<span>' + moves[i] + ' ' + (moves[i + 1] ? moves[i + 1] : ' ') + '</span><br>');
+    }
+    historyElement.scrollTop(historyElement[0].scrollHeight);
+};
+
+var onDrop = function (source, target) {
+    var move = game.move({
+        from: source,
+        to: target,
+        promotion: 'q'
+    });
+
+    removeGreySquares();
+
+    if (move === null) {
+        return 'snapback';
+    }
+
+    renderMoveHistory(game.history());
+
+    // If Human vs AI and it's AI's turn, make AI move after 250ms
+    if (!humanVsHuman) {
+        window.setTimeout(makeBestMove, 250);
+    }
+};
+
+var onSnapEnd = function () {
+    board.position(game.fen());
+};
+
+var onMouseoverSquare = function(square, piece) {
+    var moves = game.moves({
+        square: square,
+        verbose: true
+    });
+
+    if (moves.length === 0) return;
+
+    greySquare(square);
+
+    for (var i = 0; i < moves.length; i++) {
+        greySquare(moves[i].to);
+    }
+};
+
+var onMouseoutSquare = function(square, piece) {
+    removeGreySquares();
+};
+
+var removeGreySquares = function() {
+    $('#board .square-55d63').css('background', '');
+};
+
+var greySquare = function(square) {
+    var squareEl = $('#board .square-' + square);
+
+    var background = '#a9a9a9';
+    if (squareEl.hasClass('black-3c85d') === true) {
+        background = '#696969';
+    }
+
+    squareEl.css('background', background);
+};
+
+// Config and initialization
+
+var cfg = {
+    draggable: true,
+    position: 'start',
+    onDragStart: onDragStart,
+    onDrop: onDrop,
+    onMouseoutSquare: onMouseoutSquare,
+    onMouseoverSquare: onMouseoverSquare,
+    onSnapEnd: onSnapEnd
+};
+
+board = ChessBoard('board', cfg);
+
+//
